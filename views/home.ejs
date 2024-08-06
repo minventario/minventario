@@ -1,12 +1,21 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>Welcome to Minventario</p>
-    
-  </body>
+<head>
+  <title>Inventario</title>
+</head>
+<body>
+  <h1>Inventario</h1>
+  <a href="/products/new">Nuevo Producto</a>
+  <ul>
+    <% products.forEach(product => { %>
+      <li>
+        <%= product.name %> - <%= product.price %> - <%= product.quantity %>
+        <a href="/products/<%= product.id %>/edit">Editar</a>
+        <form action="/products/<%= product.id %>/delete" method="POST" style="display:inline;">
+          <button type="submit">Eliminar</button>
+        </form>
+      </li>
+    <% }) %>
+  </ul>
+</body>
 </html>
