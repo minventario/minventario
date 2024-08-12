@@ -18,3 +18,6 @@ insert into cars (model, brand) values
     ('Camry', 'Toyota'),
     ('Sentra', 'Nissan'),
     ('Altima', 'Nissan');
+
+
+    SELECT*from products;

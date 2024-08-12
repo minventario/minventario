@@ -1,77 +1,58 @@
-/*
 const mariadb = require('mariadb');
 const pool = mariadb.createPool({
-    host: "db",
+    host: "db", 
     user: "mariadb",
     password: "mariadb",
     database: "mariadb",
     connectionLimit: 5
 });
 
- // Exportar el pool de conexiones de manera segura
-module.exports = Object.freeze({
-    getConnection: () => pool.getConnection(),
-    query: (sql, values) => pool.query(sql, values)
-}); */
+console.log(pool); // línea para verificar la salida
+
+(async () => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const rows = await conn.query("SELECT 1 as val");
+        console.log(rows); // Esto debería imprimir: [{ val: 1 }]
+    } catch (err) {
+        console.error("Error en la consulta simple:", err);
+    } finally {
+        if (conn) conn.release(); // Cierra la conexión
+    }
+})();
 
 
+module.exports = {
 
-
-/* --
-module.exports = Object.freeze({
-    findById: async (id) => {
+    pool, 
+    
+    insertProduct: async ({ name, description, price, quantity }) => {
+        let conn;
         try {
-
             conn = await pool.getConnection();
-            const rows = await conn.query("SELECT * from cars where id = ?", [id]);
-            // rows: [ {val: 1}, meta: ... ]
-            if (rows.length > 0){
-                return rows[0];
-            }
-            return null
+            const query = `INSERT INTO products (name, description, price, quantity) VALUES (?, ?, ?, ?)`;
+            const result = await conn.query(query, [name, description, price, quantity]);
+            return result;
+        } catch (err) {
+            console.error("Error en insertProduct:", err);
+            throw err;
         } finally {
-            if (conn) conn.release(); //release to pool
+            if (conn) conn.release();
         }
     },
-    findAll: async () => {
-        try {
-
-            conn = await pool.getConnection();
-            const rows = await conn.query("SELECT * from cars");
-            // rows: [ {val: 1}, meta: ... ]
-            return rows;
-        } finally {
-            if (conn) conn.release(); //release to pool
-        }
-    },
-}); ---- */ 
-
-
-
-
-
-const mariadb = require('mariadb');
-const pool = mariadb.createPool({
-    host: "db", // Cambia esto si estás usando un contenedor u otra configuración
-    user: "mariadb",
-    password: "mariadb",
-    database: "mariadb",
-    connectionLimit: 5
-});
-
-module.exports = Object.freeze({
+    
     findAll: async () => {
         let conn;
         try {
             conn = await pool.getConnection();
-            // Ajusta el nombre de la tabla a tu esquema de base de datos
-            const rows = await conn.query("SELECT * FROM products"); // Asegúrate de que el nombre de la tabla es 'products'
+            const rows = await conn.query("SELECT * FROM products");
             return rows;
         } catch (err) {
             console.error("Error en findAll:", err);
             throw err;
         } finally {
-            if (conn) conn.release(); // Devuelve la conexión al pool
+            if (conn) conn.release();
         }
     },
 
@@ -79,7 +60,6 @@ module.exports = Object.freeze({
         let conn;
         try {
             conn = await pool.getConnection();
-            // Ajusta el nombre de la tabla a tu esquema de base de datos
             const rows = await conn.query("SELECT * FROM products WHERE id = ?", [id]);
             if (rows.length > 0) {
                 return rows[0];
@@ -89,7 +69,10 @@ module.exports = Object.freeze({
             console.error("Error en findById:", err);
             throw err;
         } finally {
-            if (conn) conn.release(); // Devuelve la conexión al pool
+            if (conn) conn.release();
         }
     }
-});
+
+
+
+};

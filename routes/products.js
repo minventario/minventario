@@ -1,136 +1,135 @@
 const express = require('express');
 const router = express.Router();
-const productModel = require('../models/product');
+const db = require('../repository/repo'); // Importa el pool de conexiones
+const { pool } = require('../repository/repo');
 
-// Ruta para obtener todos los productos
+
+// Obtener todos los productos
 router.get('/', async (req, res) => {
-    try {
-        const products = await productModel.findAll();
-        res.render('index', { products });
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
+  let conn;
+  try {
+    conn = await pool.getConnection(); // Obtén una conexión del pool
+    const products = await conn.query('SELECT * FROM products'); // Realiza la consulta
+    res.render('products/index', { products });
+  } catch (err) {
+    res.status(500).send(err.message); // Maneja errores
+  } finally {
+    if (conn) conn.end(); // Asegúrate de cerrar la conexión
+  }
 });
 
-// Ruta para obtener un producto por ID
-router.get('/:id', async (req, res) => {
-    try {
-        const product = await productModel.findById(req.params.id);
-        if (product) {
-            res.render('product-detail', { product });
-        } else {
-            res.status(404).send('Producto no encontrado');
-        }
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
+// Formulario para crear un nuevo producto
+router.get('/new', (req, res) => {
+  res.render('products/new');
 });
 
-// Ruta para crear un nuevo producto
+
+// Ruta para mostrar el formulario de "Nuevo Producto"
+router.get('/products/new', (req, res) => {
+  res.render('products/new'); // Renderiza el formulario de creación de productos
+});
+
+
+// Ruta para manejar el POST de productos (creación de un nuevo producto)
 router.post('/', async (req, res) => {
-    try {
-        const newProduct = {
-            nombre: req.body.nombre,
-            descripcion: req.body.descripcion,
-            precio: req.body.precio
-        };
-        const productId = await productModel.create(newProduct);
-        res.redirect(`/products/${productId}`);
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
-});
-
-// Ruta para actualizar un producto
-router.put('/:id', async (req, res) => {
-    try {
-        const updatedProduct = {
-            nombre: req.body.nombre,
-            descripcion: req.body.descripcion,
-            precio: req.body.precio
-        };
-        await productModel.update(req.params.id, updatedProduct);
-        res.redirect(`/products/${req.params.id}`);
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
-});
-
-// Ruta para eliminar un producto
-router.delete('/:id', async (req, res) => {
-    try {
-        await productModel.delete(req.params.id);
-        res.redirect('/products');
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
-});
-
-module.exports = router;
-
-
-
-/*
-
-const express = require('express'); //importar express
-const router  = express.Router(); // enrutador 
-//const db = require('../db'); //importa la configuracion de la base de datos 
-var db = require("../repository/repo");
-
-//Obtener todos los productos
-router.get('/', (req, res) => {
-    db.query('select*from products', (err, results) => {
-        if (err) throw err; //Manejo de errores
-        res.render('products/index', {products: results }); //Renderiza la vista de productos 
-    });
+  const { name, description, price, quantity } = req.body;
+  try {
+      // Inserta el producto en la base de datos usando la función insertProduct de repo.js
+      const result = await db.insertProduct({ name, description, price, quantity });
+      res.redirect('/'); // Redirige a la lista de productos después de guardar
+  } catch (err) {
+      console.error("Error al guardar el producto:", err);
+      res.status(500).send('Error al guardar el producto');
+  }
 }); 
 
-// Formulario para crear un nuevo producto 
-router.get('/new', (req, res) =>{
-    res.render('products/new'); //Renderiza la vista para crear un nuevo producto
+
+// Ruta para manejar el formulario de nuevo producto
+router.post('/', async (req, res) => {
+  try {
+      const { name, description, price, quantity } = req.body;
+      await db.insertProduct(name, description, price, quantity);
+      res.redirect('/'); // Redirige al índice después de agregar el producto
+  } catch (err) {
+      console.error('Error al agregar el producto:', err);
+      res.status(500).send('Error al agregar el producto');
+  }
 });
 
 // Crear un nuevo producto
-router.post('/', (req, res) => {
-    const {name, description, price, quantity } = req.body; // Datos del formulario
-    const query = 'insert into products (name, description, price, quantity) values (?, ?, ?, ?)';
-    db.query(query, [name, description, price, quantity], (err, result) => {
-        if (err) throw err; // Manejo de errores 
-        res.redirect('/products'); //Redirige a la lista de productos 
-    });
+router.post('/', async (req, res) => {
+  const { name, description, price, quantity } = req.body; 
+
+  // Validación de los datos recibidos
+  if (!name || !description || !price || !quantity) {
+    return res.status(400).send('Todos los campos son requeridos'); // Responde con un error 400 si faltan campos
+  }
+
+  const query = 'INSERT INTO products (name, description, price, quantity) VALUES (?, ?, ?, ?)';
+  let conn;
+
+  try {
+    conn = await pool.getConnection(); // Obtén una conexión del pool de conexiones
+    await conn.query(query, [name, description, price, quantity]); // Ejecuta la consulta para insertar el producto
+    res.redirect('/products'); // Redirige al usuario a la lista de productos
+  } catch (err) {
+    console.error('Error en la consulta SQL:', err); // Imprime el error en la consola para depuración
+    res.status(500).send('Error al crear el producto'); // Responde con un error 500 si ocurre un error
+  } finally {
+    if (conn) conn.release(); // Asegúrate de liberar la conexión al pool, sin importar si hubo un error o no
+  }
 });
 
-//Formulario para editar un producto
-router.get('/:id/edit', (req, res) =>{
-    const { id } = req.params; // id del producto
-    db.query('select*from products where id = ?', [id], (err, result) => {
-        if (err) throw err; //Manejo de errores
-        if (result.length === 0) return res.status(404).send ('Producto no encontrado'); //Manejo de errores
-        res.render('products/edit', {product: result[0]}); //Renderiza la vista el producto
-    });
-}); 
-
-// Actualizar un producto 
-router.post('/:id', (req, res) => {
-    const { id } = req.params; //id del producto
-    const {name, description, price, quantity} = req.body; //Datos del formulario
-    const query = 'update products set name = ?, description = ?, quantity = ? where id = ?'; 
-    db.query(query, [name, description, price, quantity, id], (err, result) => {
-        if (err) throw err; //Manejo de errores
-        res.redirect('/products'); //Redirige a la lista de productos
-    });
+// Formulario para editar un producto
+router.get('/:id/edit', async (req, res) => {
+  const { id } = req.params;
+  let conn;
+  try {
+    conn = await pool.getConnection(); // Obtén una conexión del pool
+    const result = await conn.query('SELECT * FROM products WHERE id = ?', [id]);
+    if (result.length === 0) return res.status(404).send('Producto no encontrado');
+    res.render('products/edit', { product: result[0] });
+  } catch (err) {
+    res.status(500).send(err.message); // Maneja errores
+  } finally {
+    if (conn) conn.end(); // Asegúrate de cerrar la conexión
+  }
 });
 
-//Eliminar un producto 
-
-router.post('/:id/delete', (req, res) => {
-    const { id } = req.params; //id del producto
-    db.query('delete from products where id = ?', [id], (err, result) => {
-        if (err) throw err; // Manejo de errores 
-        res.redirect('/products'); //Redirige a la lista de productos
-    });
+// Actualizar un producto
+router.post('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, description, price, quantity } = req.body;
+  const query = 'UPDATE products SET name = ?, description = ?, price = ?, quantity = ? WHERE id = ?';
+  let conn;
+  try {
+    conn = await pool.getConnection(); // Obtén una conexión del pool
+    await conn.query(query, [name, description, price, quantity, id]);
+    res.redirect('/products');
+  } catch (err) {
+    res.status(500).send(err.message); // Maneja errores
+  } finally {
+    if (conn) conn.end(); // Asegúrate de cerrar la conexión
+  }
 });
 
-module.exports = router; //Exporta el enrutadorrr
+// Eliminar un producto
+router.post('/:id/delete', async (req, res) => {
+  const { id } = req.params;
+  let conn;
+  try {
+      conn = await pool.getConnection();
+      const result = await conn.query("DELETE FROM products WHERE id = ?", [id]);
+      if (result.affectedRows === 0) {
+          return res.status(404).send('Producto no encontrado');
+      }
+      res.redirect('/products'); // Redirige a la lista de productos después de eliminar
+  } catch (err) {
+      console.error("Error al eliminar el producto:", err);
+      res.status(500).send('Error al eliminar el producto');
+  } finally {
+      if (conn) conn.release();
+  }
+});
 
-*/
+module.exports = router;

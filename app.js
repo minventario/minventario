@@ -58,12 +58,23 @@ app.listen(PORT, () => {
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message; //Mensaje de error 
-  res.locasls.error = req.app.get('env') === 'development' ? err : {}; //Mostrar error en desarrollo 
+  res.locals.error = req.app.get('env') === 'development' ? err : {}; //Mostrar error en desarrollo 
+
 
   // render the error page
   res.status(err.status || 500); // Estado del error 
   res.render('error'); // Renderizar la vista de error
 });
 
+
+app.get('/', async (req, res) => {
+  try {
+      const products = await db.findAll();
+      res.render('index', { title: 'Minventario', products });
+  } catch (err) {
+      console.error('Error al obtener productos:', err);
+      res.status(500).send('Error al obtener productos');
+  }
+});
 
 module.exports = app; //Exportar la acpliacacion para ser usada por el servidor 
