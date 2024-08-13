@@ -49,10 +49,12 @@ app.use(function(req, res, next) { //Crear error 404 y pasar al siguente middlew
   next(createError(404));
 });
 
-/* // Iniciar el servidor
+/*
+// Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor iniciado en http://db:${PORT}`);
 }); */
+
 
 // error handler
 app.use(function(err, req, res, next) {

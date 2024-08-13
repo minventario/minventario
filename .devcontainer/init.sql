@@ -1,23 +1,10 @@
-CREATE TABLE IF NOT EXISTS cars (
-    id INT NOT NULL AUTO_INCREMENT,
-    model text,
-    brand text,
-    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    update_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
-    PRIMARY KEY (id)
-);
-
-insert into cars (model, brand) values 
-    ('Civic', 'Honda'),
-    ('Corolla', 'Toyota'),
-    ('Fusion', 'Ford'),
-    ('Focus', 'Ford'),
-    ('Cruze', 'Chevrolet'),
-    ('Malibu', 'Chevrolet'),
-    ('Accord', 'Honda'),
-    ('Camry', 'Toyota'),
-    ('Sentra', 'Nissan'),
-    ('Altima', 'Nissan');
-
-
-    SELECT*from products;
+create table products (
+id int AUTO_INCREMENT primary key,
+name varchar  (250) not null,
+description TEXT,
+price decimal (10,2) not null,
+quantity int not null,
+imagen_url varchar (255),
+creation_date timestamp default current_timestamp,
+actualization_date timestamp default current_timeStamp  on update current_timeStamp,
+activo boolean default true);
