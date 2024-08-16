@@ -14,6 +14,9 @@ router.get('/', async (req, res) => {
   }
 });
 
+
+
+
 console.log(db); // Esto debería mostrar { findAll: [Function: findAll], findById: [Function: findById] }
 
 module.exports = router; 

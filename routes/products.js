@@ -132,4 +132,10 @@ router.post('/:id/delete', async (req, res) => {
   }
 });
 
+// Ruta para el home
+router.get('/home', (req, res) => {
+  res.render('products/home');  // Renderiza 'views/products/home.ejs'
+});
+
+
 module.exports = router;

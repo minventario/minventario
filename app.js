@@ -12,7 +12,8 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var productsRouter = require('./routes/products');
 
-// app.use('/products', productsRouter);
+//app.use('/products', productsRouter);
+
 
 
 
@@ -22,6 +23,7 @@ const PORT = process.env.PORT || 3001; */
 // Configuracion del motor de vistas 
 app.set('views', path.join(__dirname, 'views')); // Directorio de vistas
 app.set('view engine', 'ejs'); //Motor de vistas EJS 
+app.set('views', './views');
 
 // Configuracion de middlewares 
 app.use(logger('dev')); //Registro de solicitudes 
@@ -42,7 +44,12 @@ app.use(session({
 app.use('/', indexRouter); // Ruta principal 
 app.use('/users', usersRouter); //Ruta de usuarios 
 app.use('/products', productsRouter); // Ruta de productos (CRUD)
+app.use('/', productsRoutes);
+//app.use(productsRoutes);
 
+
+
+app.use(express.static('public'));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) { //Crear error 404 y pasar al siguente middleware
@@ -55,6 +62,10 @@ app.listen(PORT, () => {
   console.log(`Servidor iniciado en http://db:${PORT}`);
 }); */
 
+const port = 3003;
+app.listen(port, () => {
+    console.log(`Servidor corriendo en http://localhost:${port}`);
+});
 
 // error handler
 app.use(function(err, req, res, next) {
@@ -78,5 +89,19 @@ app.get('/', async (req, res) => {
       res.status(500).send('Error al obtener productos');
   }
 });
+
+
+/*
+// Ruta para el índice (index) en la carpeta 'producto'
+app.get('/index', (req, res) => {
+  res.render('products/index');  // Renderiza 'producto/index.ejs'
+});
+
+// Ruta para el home en la carpeta 'producto'
+app.get('/home', (req, res) => {
+  res.render('products/home');  // Renderiza 'producto/home.ejs'
+}); */
+
+
 
 module.exports = app; //Exportar la acpliacacion para ser usada por el servidor 
